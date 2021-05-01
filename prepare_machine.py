@@ -1,6 +1,5 @@
 import nltk
 import pymorphy2
-from pymystem3 import Mystem
 from tqdm import tqdm
 
 class PrepareMachine:
