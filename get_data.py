@@ -4,12 +4,14 @@ import numpy as np
 import string
 import nltk
 import configparser
+import os
 import sys
 from gensim.models.word2vec import Word2Vec
 from prepare_machine import PrepareMachine
 
+BASE_DIR = os.path.split(os.path.abspath(__file__))[0]
 config = configparser.ConfigParser()
-config.read('config.cfg')
+config.read(os.path.join(BASE_DIR, 'config.cfg'))
 DB_AUTH = {key: config['DB'][key] for key in config['DB']}
 KEYWORDS = config['KEY'].get('keywords', '').split()
 
@@ -36,7 +38,7 @@ def from_db_to_df(auth):
 
 def prepare_pipeline(data):
     try:
-        with open('manual_stop_words.txt') as fh:
+        with open(os.path.join(BASE_DIR, 'manual_stop_words.txt')) as fh:
             manual_stop_words = fh.read().rstrip().split()
     except FileNotFoundError:
         manual_stop_words = []
@@ -87,7 +89,7 @@ def main(auth):
     values = groups[groups['value'] != ''].apply(lambda df: df['value'] * df['rate'], axis=1)
     groups.loc[groups['value'] != '', 'value'] = values
 
-    groups[['id', 'value']].to_csv('data.csv', index=False)
+    groups[['id', 'value']].to_csv(os.path.join(BASE_DIR, 'data.csv'), index=False)
 
 if __name__ == '__main__':
     main(DB_AUTH)
