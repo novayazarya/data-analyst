@@ -6,6 +6,7 @@ import re
 import unicodedata
 import psycopg2
 import configparser
+import os
 from bs4 import BeautifulSoup as soup
 from statistics import mean
 from datetime import datetime
@@ -17,10 +18,13 @@ HEADERS = {
             "User-agent": 
             "Mozilla/5.0 (compatible; YandexAccessibilityBot/3.0; +http://yandex.com/bots)"
           }
-MAX_CONQUR_REQ = 10
+
+BASE_DIR = os.path.split(os.path.abspath(__file__))[0]
 
 config = configparser.ConfigParser()
-config.read('config.cfg')
+config.read(os.path.join(BASE_DIR, 'config.cfg'))
+URL = config['SCRAP'].get('urlfmt')
+MAX_CONQUR_REQ = int(config['SCRAP'].get('maxreq', 10))
 DB_AUTH = {key: config['DB'][key] for key in config['DB']}
 
 class DateEncoder(json.JSONEncoder):
@@ -141,6 +145,7 @@ def connect_to_db(auth):
         print(f"Database error {e}")
     return False
 
+
 def table_insert(data, conn):
     """CREATE TABLE IF NOT EXISTS vacancies (
         id int PRIMARY KEY  NOT NULL,
@@ -172,7 +177,6 @@ def table_insert(data, conn):
                         , salary = EXCLUDED.salary
                         , skills = EXCLUDED.skills;
                       """
-    #conn = psycopg2.connect("dbname=hh user=popov")
     
     if conn:
         with conn, (cursor:=conn.cursor()):
@@ -183,7 +187,7 @@ def table_insert(data, conn):
             plural = count > 1
             print(f"{count} row{'s' * plural} {['is', 'are'][plural]} {status.split()[0].lower()}ed into the table")
     else:
-        print(f"Database is not connected")
+        print("Database is not connected")
     #cursor.close()
 
 
@@ -191,10 +195,12 @@ def main(keyword, items_on_page=100, area=113):
     """ area 1 - Moscow, 113 - Russia; keyword - search query; items_on_page - vacancies on a serp """
     
     conn = connect_to_db(DB_AUTH)
-    url = f'https://hh.ru/search/vacancy?st=searchVacancy&text={keyword} \
-                                                         &area={area} \
-                                                         &items_on_page={items_on_page}'
-    urls = [*gen_pages_urls(url, get_pages_count(url))] # get_pages_count(url)
+    # url = f'https://hh.ru/search/vacancy?st=searchVacancy&text={keyword} \
+    #                                                     &area={area} \
+    #                                                     &items_on_page={items_on_page}'
+    
+    url = URL.format(keyword, area, items_on_page) # eval(f"f'{URL}'")
+    urls = [*gen_pages_urls(url, get_pages_count(url))]
     print(len(urls))
     loop = asyncio.get_event_loop()
     htmls = loop.run_until_complete(fetch_all(urls, loop))
@@ -214,8 +220,10 @@ if __name__ == '__main__':
     #loop = asyncio.get_event_loop()
     #htmls = loop.run_until_complete(fetch_all(urls, loop))
     #vacancy_urls = sum([parse_vacancy_urls(html) for html in htmls if not isinstance(html, Exception)], [])
-    
-    main('data+analyst', area=1)
+     
+    area = config['SCRAP'].get('area', 1)
+    query =  area = config['SCRAP'].get('query', 'data+analyst')
+    main(query, area)
 
     #htmls = loop.run_until_complete(fetch_all(vacancy_urls[:2], loop))
     #print(parse_vacancy_data(htmls2[:5]))
