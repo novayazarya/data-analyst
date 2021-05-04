@@ -12,7 +12,9 @@ from statistics import mean
 from datetime import datetime
 
 import locale
-locale.setlocale(locale.LC_ALL, 'ru_RU')
+
+locale.setlocale(locale.LC_ALL, 'ru_RU.utf8')
+#locale.setlocale(locale.LC_ALL, locale.locale_aliases['ru_RU'])
 # TODO: Logging
 HEADERS = {
             "User-agent": 
@@ -191,7 +193,7 @@ def table_insert(data, conn):
     #cursor.close()
 
 
-def main(keyword, items_on_page=100, area=113):
+def main(keyword, area=113, items_on_page=100):
     """ area 1 - Moscow, 113 - Russia; keyword - search query; items_on_page - vacancies on a serp """
     
     conn = connect_to_db(DB_AUTH)
@@ -222,9 +224,9 @@ if __name__ == '__main__':
     #vacancy_urls = sum([parse_vacancy_urls(html) for html in htmls if not isinstance(html, Exception)], [])
      
     area = config['SCRAP'].get('area', 1)
-    query =  area = config['SCRAP'].get('query', 'data+analyst')
-    main(query, area)
-
+    query = config['SCRAP'].get('query', 'data+analyst')
+    main(query, area=area)
+    #print(config['SCRAP'].get('urlfmt').format(query, area, 100))
     #htmls = loop.run_until_complete(fetch_all(vacancy_urls[:2], loop))
     #print(parse_vacancy_data(htmls2[:5]))
     #print([parse_vacancy_data(html) for html in htmls if not isinstance(html, Exception)])
