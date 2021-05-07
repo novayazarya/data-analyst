@@ -1,15 +1,16 @@
 # Установка Apache Airflow
 
-Apache Airflow свои настройки хранит в файле airflow.cfg, который по умолчанию будет создан в домашней директории юзера по пути ~/airflow/airflow.cfg
+Apache Airflow свои настройки хранит в файле airflow.cfg, который по умолчанию будет создан в домашней директории юзера по пути `~/airflow/airflow.cfg`.
 
-Домашний каталог airflow по-умолчанию `~/airflow`
+Домашний каталог airflow по-умолчанию `~/airflow`.
 Путь можно изменить, присвоив переменной окружения новое значение:
 
-`export AIRFLOW_HOME=~/airflow`
+```bash
+export AIRFLOW_HOME=~/airflow
+```
+Пример скрипта установки:
 
-Пример скрипта установки
-
-```sh
+```bash
 AIRFLOW_VERSION=2.0.1
 PYTHON_VERSION="$(python3 --version | cut -d " " -f 2 | cut -d "." -f 1-2)"
 CONSTRAINT_URL="https://raw.githubusercontent.com/apache/airflow/constraints-${AIRFLOW_VERSION}/constraints-${PYTHON_VERSION}.txt"
