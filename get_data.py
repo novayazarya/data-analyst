@@ -52,9 +52,13 @@ def prepare_pipeline(data):
     prep.normalization()
     prep.lemmatizing()
     prepared_data = prep.remove_stop_words(manual_stop_words)
-    # prepared_data = prep.remove_hapaxes()
     return prepared_data
 
+def w2v_model(prepared_data):
+    w2v = Word2Vec(size=200, window=5, min_count=5)
+    w2v.build_vocab(prepared_data)
+    w2v.train(prepared_data, total_examples=len(prepared_data), epochs=100)
+    return w2v
 
 def main(auth):
     df = from_db_to_df(auth)
@@ -62,16 +66,17 @@ def main(auth):
     data = df.apply(' '.join, axis=1)
     prepared_data = prepare_pipeline(data) 
     counts = nltk.FreqDist(sum(prepared_data, []))
-    w2v = Word2Vec(sentences=prepared_data, vector_size=200, epochs=30)
+    w2v = w2v_model(prepared_data) 
+    # w2v = Word2Vec(sentences=prepared_data, vector_size=200, epochs=30)
     
     dfs, keys = [], []
     
     for key in KEYWORDS:
-        lexemes = []
-        for lexem, dist in w2v.wv.most_similar(key, topn=13):
-            lexemes.append([lexem, dist])
-        dfs.append(pd.DataFrame([[key, '', '']] + [[key] + x for x in lexemes]))
-        keys += [x for x, _ in lexemes]
+        terms = []
+        for lexem, dist in w2v.wv.most_similar(key, topn=10):
+            terms.append([lexem, dist])
+        dfs.append(pd.DataFrame([[key, '', '']] + [[key] + x for x in terms]))
+        keys += [x for x, _ in terms]
 
     groups = pd.concat(dfs)
     groups.columns = ['cluster', 'lexem', 'rate']
